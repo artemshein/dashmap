@@ -200,7 +200,7 @@ impl<T: ?Sized + Default> Default for RwLock<T> {
 impl<'rwlock, T: ?Sized> RwLockUpgradeableGuard<'rwlock, T> {
     fn try_upgrade_internal(self, strong: bool) -> Result<RwLockWriteGuard<'rwlock, T>, Self> {
         if compare_exchange(
-            &self.lock,
+            self.lock,
             UPGRADED,
             WRITER,
             Ordering::Acquire,
@@ -210,7 +210,7 @@ impl<'rwlock, T: ?Sized> RwLockUpgradeableGuard<'rwlock, T> {
         .is_ok()
         {
             let out = Ok(RwLockWriteGuard {
-                lock: &self.lock,
+                lock: self.lock,
                 data: self.data,
                 _invariant: PhantomData,
             });
@@ -242,7 +242,7 @@ impl<'rwlock, T: ?Sized> RwLockUpgradeableGuard<'rwlock, T> {
         self.lock.fetch_add(READER, Ordering::Acquire);
 
         RwLockReadGuard {
-            lock: &self.lock,
+            lock: self.lock,
             data: self.data,
         }
     }
@@ -253,7 +253,7 @@ impl<'rwlock, T: ?Sized> RwLockWriteGuard<'rwlock, T> {
         self.lock.fetch_add(READER, Ordering::Acquire);
 
         RwLockReadGuard {
-            lock: &self.lock,
+            lock: self.lock,
             data: self.data,
         }
     }
